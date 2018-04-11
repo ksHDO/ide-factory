@@ -20,24 +20,24 @@ namespace Factory_Ide
     /// </summary>
     public partial class PropertyControl : UserControl
     {
-        private string m_propertyName, m_propertyValue;
+        protected string propertyName, propertyValue;
 
         public string PropertyName
         {
-            get => m_propertyName;
+            get => propertyName;
             set
             {
-                m_propertyName = value;
+                propertyName = value;
                 LblName.Content = value;
             }
         }
 
         public string PropertyValue
         {
-            get => m_propertyValue;
+            get => propertyValue;
             set
             {
-                m_propertyValue = value;
+                propertyValue = value;
                 TbxValue.Text = value;
             }
         }
@@ -48,13 +48,16 @@ namespace Factory_Ide
             remove => TbxValue.TextChanged -= value;
         }
 
-        public PropertyControl(string name, string value)
+        public PropertyControl(string name, string value) : this()
         {
-            InitializeComponent();
-
             PropertyName = name;
             PropertyValue = value;
 
+        }
+
+        public PropertyControl()
+        {
+            InitializeComponent();
         }
 
 
