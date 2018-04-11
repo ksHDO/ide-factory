@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Factory_Ide.Controls;
 
 namespace Factory_Ide
 {
@@ -33,9 +34,15 @@ namespace Factory_Ide
             InitializeComponent();
             LoadSupportedComponents();
 
-            AddCanvasComponents();
+            // AddCanvasComponents();
 
-            
+            LbxComponents.MouseDoubleClick += (sender, args) =>
+            {
+                Control control = (Control) Activator.CreateInstance(m_components[LbxComponents.SelectedIndex]);
+                SetTextOnControl(control, control.GetType().Name);
+                AddComponent(control);
+            };
+            ClearProperties();
         }
 
         private void LoadSupportedComponents()
@@ -44,7 +51,8 @@ namespace Factory_Ide
 
             m_components.Add(typeof(Button));
 
-            m_components.Add(typeof(Label));
+            m_components.Add(typeof(LabelTextbox));
+            m_components.Add(typeof(TextBox));
 
             LbxComponents.ItemsSource = m_components.Select(s => s.Name);
             
@@ -61,10 +69,13 @@ namespace Factory_Ide
 
         private void AddComponent(Control control)
         {
+            Canvas.SetTop(control, 10);
+            Canvas.SetLeft(control, 10);
             CvsInterface.Children.Add(control);
 
+
             control.GotFocus += OnCanvasComponentSelected;
-            
+            control.Focus();
         }
 
         private void UpdatePropertiesEvent(object sender, SelectionChangedEventArgs args)
@@ -72,8 +83,26 @@ namespace Factory_Ide
 
         }
 
+        private static void SetTextOnControl(Control c, string text)
+        {
+            if (c is ContentControl contentControl)
+            {
+                contentControl.Content = text;
+            }
+            else if (c is TextBox textBox)
+            {
+                textBox.Text = text;
+            }
+        }
+
+        private void ClearProperties()
+        {
+            LbxProperties.ItemsSource = null;
+        }
+
         private void OnCanvasComponentSelected(object sender, RoutedEventArgs args)
         {
+            ClearProperties();
             Control c = (Control) sender;
             List<PropertyControl> properties = new List<PropertyControl>();
 
@@ -81,6 +110,11 @@ namespace Factory_Ide
             {
                 var content = new PropertyControl("Content", control.Content.ToString());
                 content.OnTextboxDataChanged += (o, eventArgs) => control.Content = (o as TextBox)?.Text;
+                properties.Add(content);
+            } else if (c is TextBox textbox)
+            {
+                var content = new PropertyControl("Content", textbox.Text.ToString());
+                content.OnTextboxDataChanged += (o, eventArgs) => textbox.Text = (o as TextBox)?.Text;
                 properties.Add(content);
             }
 
@@ -109,7 +143,21 @@ namespace Factory_Ide
             };
             properties.Add(width);
 
-            var top = new PropertyNumberControl("X", Canvas.GetTop(c));
+            var left = new PropertyNumberControl("X", Canvas.GetLeft(c));
+            left.OnTextboxDataChanged += (o, eventArgs) =>
+            {
+                if (o is TextBox textbox)
+                {
+                    left.SetPropertyValue(textbox.Text);
+                    textbox.Text = left.PropertyValue.ToString();
+                    CvsInterface.Children.Remove(c);
+                    Canvas.SetLeft(c, left.PropertyValue);
+                    CvsInterface.Children.Add(c);
+                }
+            };
+            properties.Add(left);
+
+            var top = new PropertyNumberControl("Y", Canvas.GetTop(c));
             top.OnTextboxDataChanged += (o, eventArgs) =>
             {
                 if (o is TextBox textbox)
@@ -123,19 +171,7 @@ namespace Factory_Ide
             };
             properties.Add(top);
 
-            var left = new PropertyNumberControl("Y", Canvas.GetLeft(c));
-            left.OnTextboxDataChanged += (o, eventArgs) =>
-            {
-                if (o is TextBox textbox)
-                {
-                    left.SetPropertyValue(textbox.Text);
-                    textbox.Text = left.PropertyValue.ToString();
-                    CvsInterface.Children.Remove(c);
-                    Canvas.SetLeft(c, left.PropertyValue);
-                    CvsInterface.Children.Add(c);
-                }
-            };
-            properties.Add(left);
+
 
             LbxProperties.ItemsSource = properties;
 
