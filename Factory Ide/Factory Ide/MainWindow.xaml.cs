@@ -84,7 +84,58 @@ namespace Factory_Ide
                 properties.Add(content);
             }
 
-            
+            var height = new PropertyNumberControl("Height", c.Height);
+            height.OnTextboxDataChanged += (o, eventArgs) =>
+            {
+                if (o is TextBox textbox)
+                {
+                    height.SetPropertyValue(textbox.Text);
+                    textbox.Text = height.PropertyValue.ToString();
+                    c.Height = height.PropertyValue;
+                }
+
+            };
+            properties.Add(height);
+
+            var width = new PropertyNumberControl("Width", c.Width);
+            width.OnTextboxDataChanged += (o, eventArgs) =>
+            {
+                if (o is TextBox textbox)
+                {
+                    width.SetPropertyValue(textbox.Text);
+                    textbox.Text = width.PropertyValue.ToString();
+                    c.Width = width.PropertyValue;
+                }
+            };
+            properties.Add(width);
+
+            var top = new PropertyNumberControl("X", Canvas.GetTop(c));
+            top.OnTextboxDataChanged += (o, eventArgs) =>
+            {
+                if (o is TextBox textbox)
+                {
+                    top.SetPropertyValue(textbox.Text);
+                    textbox.Text = top.PropertyValue.ToString();
+                    CvsInterface.Children.Remove(c);
+                    Canvas.SetTop(c, top.PropertyValue);
+                    CvsInterface.Children.Add(c);
+                }
+            };
+            properties.Add(top);
+
+            var left = new PropertyNumberControl("Y", Canvas.GetLeft(c));
+            left.OnTextboxDataChanged += (o, eventArgs) =>
+            {
+                if (o is TextBox textbox)
+                {
+                    left.SetPropertyValue(textbox.Text);
+                    textbox.Text = left.PropertyValue.ToString();
+                    CvsInterface.Children.Remove(c);
+                    Canvas.SetLeft(c, left.PropertyValue);
+                    CvsInterface.Children.Add(c);
+                }
+            };
+            properties.Add(left);
 
             LbxProperties.ItemsSource = properties;
 
