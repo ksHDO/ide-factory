@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Factory_Ide
+namespace Factory_Ide.Controls
 {
     public class PropertyNumberControl : PropertyControl
     {
