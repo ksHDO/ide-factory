@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Factory_Ide
+namespace Factory_Ide.Controls
 {
     /// <summary>
     /// Interaction logic for PropertyControl.xaml
@@ -52,7 +52,6 @@ namespace Factory_Ide
         {
             PropertyName = name;
             PropertyValue = value;
-
         }
 
         public PropertyControl()
