@@ -45,6 +45,12 @@ namespace Factory_Ide
             ClearProperties();
         }
 
+        public void ResetComponents()
+        {
+            CvsInterface.Children.Clear();
+            ClearProperties();
+        }
+
         private void LoadSupportedComponents()
         {
             m_components = new List<Type>();
@@ -53,6 +59,7 @@ namespace Factory_Ide
 
             m_components.Add(typeof(LabelTextbox));
             m_components.Add(typeof(TextBox));
+
 
             LbxComponents.ItemsSource = m_components.Select(s => s.Name);
             
@@ -170,11 +177,24 @@ namespace Factory_Ide
                 }
             };
             properties.Add(top);
-
-
-
             LbxProperties.ItemsSource = properties;
-
         }
+
+        private void MnuNew_OnClick(object sender, RoutedEventArgs e)
+        {
+            ResetComponents();
+        }
+
+        private void MnuExport_OnClick(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void MnuExit_OnClick(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+
     }
 }

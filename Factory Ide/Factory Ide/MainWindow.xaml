@@ -7,25 +7,36 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525"
         Background="#f3f3f3">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"></ColumnDefinition>
-            <ColumnDefinition Width="3*"></ColumnDefinition>
-            <ColumnDefinition Width="1*"></ColumnDefinition>
-        </Grid.ColumnDefinitions>
-        <DockPanel Grid.Column="0">
-            <Label Content="Components" DockPanel.Dock="Top"/>
-            <ListBox x:Name="LbxComponents" BorderThickness="0" />
-        </DockPanel>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" x:Name="MnuNew" Click="MnuNew_OnClick" />
+                <Separator />
+                <MenuItem Header="_Export" x:Name="MnuExport" Click="MnuExport_OnClick" />
+                <Separator />
+                <MenuItem Header="_Exit" x:Name="MnuExit" Click="MnuExit_OnClick"/>
+            </MenuItem>
+        </Menu>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+                <ColumnDefinition Width="3*"></ColumnDefinition>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <DockPanel Grid.Column="0">
+                <Label Content="Components" DockPanel.Dock="Top"/>
+                <ListBox x:Name="LbxComponents" BorderThickness="0" />
+            </DockPanel>
 
-        <Border Grid.Column="1" BorderThickness="1,0" BorderBrush="#d8d8d8">
-            <Canvas x:Name="CvsInterface" Background="White"/>
-        </Border>
+            <Border Grid.Column="1" BorderThickness="1,0" BorderBrush="#d8d8d8">
+                <Canvas x:Name="CvsInterface" Background="White"/>
+            </Border>
 
 
-        <DockPanel Grid.Column="2">
-            <Label Content="Properties" DockPanel.Dock="Top"/>
-            <ListBox x:Name="LbxProperties" BorderThickness="0"/>
-        </DockPanel>
-    </Grid>
+            <DockPanel Grid.Column="2">
+                <Label Content="Properties" DockPanel.Dock="Top"/>
+                <ListBox x:Name="LbxProperties" BorderThickness="0"/>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
 </Window>
