@@ -5,15 +5,27 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Factory_Ide"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="525"
+        Background="#f3f3f3">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"></ColumnDefinition>
             <ColumnDefinition Width="3*"></ColumnDefinition>
             <ColumnDefinition Width="1*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <ListView Grid.Column="0"/>
-        <Canvas Grid.Column="1" />
-        <ListView Grid.Column="2" />
+        <DockPanel Grid.Column="0">
+            <Label Content="Components" DockPanel.Dock="Top"/>
+            <ListBox x:Name="LbxComponents" BorderThickness="0" />
+        </DockPanel>
+
+        <Border Grid.Column="1" BorderThickness="1,0" BorderBrush="#d8d8d8">
+            <Canvas x:Name="CvsInterface" Background="White"/>
+        </Border>
+
+
+        <DockPanel Grid.Column="2">
+            <Label Content="Properties" DockPanel.Dock="Top"/>
+            <ListBox x:Name="LbxProperties" BorderThickness="0"/>
+        </DockPanel>
     </Grid>
 </Window>
