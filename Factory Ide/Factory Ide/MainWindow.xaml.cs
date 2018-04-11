@@ -111,7 +111,7 @@ namespace Factory_Ide
         {
             ClearProperties();
             Control c = (Control) sender;
-            List<PropertyControl> properties = new List<PropertyControl>();
+            List<Control> properties = new List<Control>();
 
             if (c is ContentControl control)
             {
@@ -177,6 +177,18 @@ namespace Factory_Ide
                 }
             };
             properties.Add(top);
+
+            var remove = new Button()
+            {
+                Content = "Remove Component"
+            };
+            remove.Click += (o, eventArgs) =>
+            {
+                CvsInterface.Children.Remove(c);
+                ClearProperties();
+            };
+
+            properties.Add(remove);
             LbxProperties.ItemsSource = properties;
         }
 
