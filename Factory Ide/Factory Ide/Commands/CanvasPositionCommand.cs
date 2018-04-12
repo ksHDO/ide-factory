@@ -16,14 +16,16 @@ namespace Factory_Ide.Commands
         private Control m_control;
         private double m_previousPosition;
         private double m_setPosition;
+        private TextBox m_textBox;
 
-        public CanvasPositionCommand(Direction direction, Canvas canvas, Control control, double position)
+        public CanvasPositionCommand(Direction direction, Canvas canvas, Control control, TextBox textBox, double position)
         {
             m_direction = direction;
             m_canvas = canvas;
             m_control = control;
             m_previousPosition = GetControlPos(direction, control);
             m_setPosition = position;
+            m_textBox = textBox;
         }
 
         public void Do()
@@ -45,6 +47,9 @@ namespace Factory_Ide.Commands
             SetControlPos(m_direction, m_control, pos);
 
             if (inCanvas) m_canvas.Children.Add(m_control);
+
+            if (MainWindow.Instance.SelectedControl == m_control)
+                m_textBox.Text = pos.ToString();
         }
 
         private static double GetControlPos(Direction direction, UIElement element)
