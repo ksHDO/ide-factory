@@ -27,13 +27,15 @@ namespace Factory_Ide.Commands
         public void Do()
         {
             m_property.SetValue(m_control, m_setValue);
-            m_textBox.Text = m_setValue.ToString();
+            if (MainWindow.Instance.SelectedControl == m_control)
+                m_textBox.Text = m_setValue.ToString();
         }
 
         public void Undo()
         {
             m_property.SetValue(m_control, m_previousValue);
-            m_textBox.Text = m_previousValue.ToString();
+            if (MainWindow.Instance.SelectedControl == m_control)
+                m_textBox.Text = m_previousValue.ToString();
         }
     }
 }

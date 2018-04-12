@@ -52,7 +52,6 @@ namespace Factory_Ide
             InitializeComponent();
             LoadSupportedComponents();
 
-            // AddCanvasComponents();
             m_undoHistory = new Stack<IFactoryIdeCommand>(200);
             m_redoHistory = new Stack<IFactoryIdeCommand>(200);
 
@@ -177,10 +176,10 @@ namespace Factory_Ide
             properties.Add(width);
 
             var left = new PropertyNumberControl("X", Canvas.GetLeft(c));
-            left.TbxValue.LostFocus += UpdateComponentEvent(propertyControl =>
+            left.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
                 PerformCommand(new CanvasPositionCommand(
-                    CanvasPositionCommand.Direction.Left, CvsInterface, c, left.PropertyValue)
+                    CanvasPositionCommand.Direction.Left, CvsInterface, c, textBox, left.PropertyValue)
                 );
             }, left);
             properties.Add(left);
@@ -189,7 +188,7 @@ namespace Factory_Ide
             top.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
                 PerformCommand(new CanvasPositionCommand(
-                    CanvasPositionCommand.Direction.Top, CvsInterface, c, top.PropertyValue)
+                    CanvasPositionCommand.Direction.Top, CvsInterface, c, textBox, top.PropertyValue)
                 );
             }, top);
             properties.Add(top);
@@ -245,7 +244,6 @@ namespace Factory_Ide
         {
             Close();
         }
-
 
         private void MnuUndo_OnClick(object sender, RoutedEventArgs e)
         {
