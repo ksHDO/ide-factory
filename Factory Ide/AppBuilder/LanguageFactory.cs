@@ -23,7 +23,7 @@ namespace AppBuilder
             var l = languages.SupportedLanguages();
             for (int j = 0; j < l.Length; j++)
             {
-                langs.Add(l[j].GetType().Name);
+                langs.Add(l[j].Name);
             }
             return langs;
         }
@@ -50,7 +50,7 @@ namespace AppBuilder
                 }
             }
 
-            l.BuildApp(path, elementList);
+            l?.BuildApp(path, elementList);
         }
 
     }
