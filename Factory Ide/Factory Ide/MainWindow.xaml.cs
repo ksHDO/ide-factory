@@ -59,6 +59,10 @@ namespace Factory_Ide
             LbxComponents.MouseDoubleClick += (sender, args) =>
             {
                 Control control = (Control) Activator.CreateInstance(m_components[LbxComponents.SelectedIndex]);
+                if (control is TextBoxBase textbox)
+                {
+                    textbox.IsReadOnly = true;
+                }
                 SetTextOnControl(control, control.GetType().Name);
                 AddComponent(control);
             };
@@ -142,31 +146,33 @@ namespace Factory_Ide
             if (c is ContentControl control)
             {
                 var content = new PropertyControl("Content", control.Content.ToString());
-                content.TbxValue.LostFocus += UpdateComponentEvent(textBox => content.Content = textBox.Text, content);
+                content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
+                {
+                    PerformCommand(new PropertyEditedCommand(control, "Content", textBox, textBox.Text));
+                }, content);
                 properties.Add(content);
             }
             else if (c is TextBox textbox)
             {
-                var content = new PropertyControl("Content", textbox.Text.ToString());
-                content.TbxValue.LostFocus += (o, eventArgs) => UpdateComponentEvent(textBox => content.Content = textBox.Text, content);
+                var content = new PropertyControl("Content", textbox.Text);
+                content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
+                {
+                    PerformCommand(new PropertyEditedCommand(textbox, "Text", textBox, textBox.Text));
+                }, content);
                 properties.Add(content);
             }
 
             var height = new PropertyNumberControl("Height", c.Height);
             height.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                height.SetPropertyValue(textBox.Text);
-                textBox.Text = height.PropertyValue.ToString();
-                c.Height = height.PropertyValue;
+                PerformCommand(new PropertyEditedCommand(c, "Height", textBox, height.PropertyValue));
             }, height);
             properties.Add(height);
 
             var width = new PropertyNumberControl("Width", c.Width);
             width.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                width.SetPropertyValue(textBox.Text);
-                textBox.Text = width.PropertyValue.ToString();
-                c.Width = width.PropertyValue;
+                PerformCommand(new PropertyEditedCommand(c, "Width", textBox, width.PropertyValue));
             }, width);
             properties.Add(width);
 
