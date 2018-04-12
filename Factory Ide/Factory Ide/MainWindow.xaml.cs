@@ -59,6 +59,10 @@ namespace Factory_Ide
             LbxComponents.MouseDoubleClick += (sender, args) =>
             {
                 Control control = (Control) Activator.CreateInstance(m_components[LbxComponents.SelectedIndex]);
+                if (control is TextBoxBase textbox)
+                {
+                    textbox.IsReadOnly = true;
+                }
                 SetTextOnControl(control, control.GetType().Name);
                 AddComponent(control);
             };
@@ -142,67 +146,52 @@ namespace Factory_Ide
             if (c is ContentControl control)
             {
                 var content = new PropertyControl("Content", control.Content.ToString());
-                content.OnTextboxDataChanged += (o, eventArgs) => control.Content = (o as TextBox)?.Text;
+                content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
+                {
+                    PerformCommand(new PropertyEditedCommand(control, "Content", textBox, textBox.Text));
+                }, content);
                 properties.Add(content);
             }
             else if (c is TextBox textbox)
             {
-                var content = new PropertyControl("Content", textbox.Text.ToString());
-                content.OnTextboxDataChanged += (o, eventArgs) => textbox.Text = (o as TextBox)?.Text;
+                var content = new PropertyControl("Content", textbox.Text);
+                content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
+                {
+                    PerformCommand(new PropertyEditedCommand(textbox, "Text", textBox, textBox.Text));
+                }, content);
                 properties.Add(content);
             }
 
             var height = new PropertyNumberControl("Height", c.Height);
-            height.OnTextboxDataChanged += (o, eventArgs) =>
+            height.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                if (o is TextBox textbox)
-                {
-                    height.SetPropertyValue(textbox.Text);
-                    textbox.Text = height.PropertyValue.ToString();
-                    c.Height = height.PropertyValue;
-                }
-
-            };
+                PerformCommand(new PropertyEditedCommand(c, "Height", textBox, height.PropertyValue));
+            }, height);
             properties.Add(height);
 
             var width = new PropertyNumberControl("Width", c.Width);
-            width.OnTextboxDataChanged += (o, eventArgs) =>
+            width.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                if (o is TextBox textbox)
-                {
-                    width.SetPropertyValue(textbox.Text);
-                    textbox.Text = width.PropertyValue.ToString();
-                    c.Width = width.PropertyValue;
-                }
-            };
+                PerformCommand(new PropertyEditedCommand(c, "Width", textBox, width.PropertyValue));
+            }, width);
             properties.Add(width);
 
             var left = new PropertyNumberControl("X", Canvas.GetLeft(c));
-            left.OnTextboxDataChanged += (o, eventArgs) =>
+            left.TbxValue.LostFocus += UpdateComponentEvent(propertyControl =>
             {
-                if (o is TextBox textbox)
-                {
-                    left.SetPropertyValue(textbox.Text);
-                    textbox.Text = left.PropertyValue.ToString();
-                    CvsInterface.Children.Remove(c);
-                    Canvas.SetLeft(c, left.PropertyValue);
-                    CvsInterface.Children.Add(c);
-                }
-            };
+                PerformCommand(new CanvasPositionCommand(
+                    CanvasPositionCommand.Direction.Left, CvsInterface, c, left.PropertyValue)
+                );
+            }, left);
             properties.Add(left);
 
             var top = new PropertyNumberControl("Y", Canvas.GetTop(c));
-            top.OnTextboxDataChanged += (o, eventArgs) =>
+            top.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                if (o is TextBox textbox)
-                {
-                    top.SetPropertyValue(textbox.Text);
-                    textbox.Text = top.PropertyValue.ToString();
-                    CvsInterface.Children.Remove(c);
-                    Canvas.SetTop(c, top.PropertyValue);
-                    CvsInterface.Children.Add(c);
-                }
-            };
+                PerformCommand(new CanvasPositionCommand(
+                    CanvasPositionCommand.Direction.Top, CvsInterface, c, top.PropertyValue)
+                );
+            }, top);
             properties.Add(top);
 
             var remove = new Button()
@@ -216,6 +205,22 @@ namespace Factory_Ide
 
             properties.Add(remove);
             LbxProperties.ItemsSource = properties;
+        }
+
+        private RoutedEventHandler UpdateComponentEvent(Action<TextBox> action, PropertyControl propertyControl)
+        {
+            return (sender, args) =>
+            {
+                if (sender is TextBox textbox)
+                {
+                    if (propertyControl is PropertyNumberControl numberControl)
+                    {
+                        numberControl.SetPropertyValue(numberControl.TbxValue.Text);
+                        numberControl.TbxValue.Text = numberControl.PropertyValue.ToString();
+                    }
+                    action(textbox);
+                }
+            };
         }
 
         public void OnCanvasComponentSelected(object sender, RoutedEventArgs args)

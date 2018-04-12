@@ -55,7 +55,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Commands\AddComponentCommand.cs" />
-    <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\CanvasPositionCommand.cs" />
+    <Compile Include="Commands\IFactoryIdeCommand.cs" />
+    <Compile Include="Commands\PropertyEditedCommand.cs" />
     <Compile Include="Commands\RemoveComponentCommand.cs" />
     <Compile Include="Controls\LabelTextbox.cs" />
     <Compile Include="Controls\PropertyControl.xaml.cs">
