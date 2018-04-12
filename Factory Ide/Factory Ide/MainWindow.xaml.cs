@@ -179,18 +179,18 @@ namespace Factory_Ide
             var left = new PropertyNumberControl("X", Canvas.GetLeft(c));
             left.TbxValue.LostFocus += UpdateComponentEvent(propertyControl =>
             {
-                CvsInterface.Children.Remove(c);
-                Canvas.SetLeft(c, left.PropertyValue);
-                CvsInterface.Children.Add(c);
+                PerformCommand(new CanvasPositionCommand(
+                    CanvasPositionCommand.Direction.Left, CvsInterface, c, left.PropertyValue)
+                );
             }, left);
             properties.Add(left);
 
             var top = new PropertyNumberControl("Y", Canvas.GetTop(c));
             top.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                CvsInterface.Children.Remove(c);
-                Canvas.SetTop(c, top.PropertyValue);
-                CvsInterface.Children.Add(c);
+                PerformCommand(new CanvasPositionCommand(
+                    CanvasPositionCommand.Direction.Top, CvsInterface, c, top.PropertyValue)
+                );
             }, top);
             properties.Add(top);
 
