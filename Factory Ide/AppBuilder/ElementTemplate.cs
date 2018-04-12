@@ -8,8 +8,8 @@ namespace AppBuilder
 {
     public class ElementTemplate
     {
-        public string name = "";
-        public string formatString = "";
+        public string name;
+        public string formatString;
 
         public ElementTemplate(string name, string formatString)
         {
