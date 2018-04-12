@@ -14,9 +14,6 @@ namespace AppBuilder
 
         protected ElementTemplate[] languageElements = new ElementTemplate[0];
 
-
-       
-
         protected void AppendTopText()
         {
             body += topText;

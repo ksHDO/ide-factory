@@ -8,8 +8,9 @@ namespace AppBuilder
 {
     public class ElementTemplate
     {
-        public string name = "";
-        public string formatString = "";
+
+        public string name;
+        public string formatString;
         private int elementID = 0;
 
         public ElementTemplate(string name, string formatString)

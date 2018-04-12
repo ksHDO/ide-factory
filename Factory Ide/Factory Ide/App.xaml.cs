@@ -13,5 +13,14 @@ namespace Factory_Ide
     /// </summary>
     public partial class App : Application
     {
+        public App()
+        {
+            Startup += StartApp;
+        }
+
+        private void StartApp(object sender, StartupEventArgs e)
+        {
+            Factory_Ide.MainWindow.Instance.Show();
+        }
     }
 }

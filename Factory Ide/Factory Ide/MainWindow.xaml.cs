@@ -8,12 +8,13 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Factory_Ide.Commands;
 using Factory_Ide.Controls;
+using ICommand = System.Windows.Input.ICommand;
 
 namespace Factory_Ide
 {
@@ -22,27 +23,73 @@ namespace Factory_Ide
     /// </summary>
     public partial class MainWindow : Window
     {
-        private struct Component
+        public static MainWindow Instance { get; private set; }
+        private Control m_selectedControl;
+        public Control SelectedControl
         {
-            public string Name;
-            public Type Type;
+            get => m_selectedControl;
+            set
+            {
+                m_selectedControl = value;
+                ClearProperties();
+                if (value != null)
+                    ShowProperties(value);
+            }
         }
+
         private List<Type> m_components;
 
-        public MainWindow()
+        private readonly Stack<IFactoryIdeCommand> m_undoHistory;
+        private readonly Stack<IFactoryIdeCommand> m_redoHistory;
+
+        static MainWindow()
+        {
+            Instance = new MainWindow();
+        }
+
+        private MainWindow()
         {
             InitializeComponent();
             LoadSupportedComponents();
 
             // AddCanvasComponents();
+            m_undoHistory = new Stack<IFactoryIdeCommand>(200);
+            m_redoHistory = new Stack<IFactoryIdeCommand>(200);
 
             LbxComponents.MouseDoubleClick += (sender, args) =>
             {
                 Control control = (Control) Activator.CreateInstance(m_components[LbxComponents.SelectedIndex]);
+                if (control is TextBoxBase textbox)
+                {
+                    textbox.IsReadOnly = true;
+                }
                 SetTextOnControl(control, control.GetType().Name);
                 AddComponent(control);
             };
             ClearProperties();
+        }
+
+        public void PerformCommand(IFactoryIdeCommand command)
+        {
+            command.Do();
+            m_redoHistory.Clear();
+            m_undoHistory.Push(command);
+        }
+
+        public void UndoCommand()
+        {
+            if (m_undoHistory.Count <= 0) return;
+            var command = m_undoHistory.Pop();
+            command.Undo();
+            m_redoHistory.Push(command);
+        }
+
+        public void RedoCommand()
+        {
+            if (m_redoHistory.Count <= 0) return;
+            var command = m_redoHistory.Pop();
+            command.Do();
+            m_undoHistory.Push(command);
         }
 
         public void ResetComponents()
@@ -56,7 +103,6 @@ namespace Factory_Ide
             m_components = new List<Type>();
 
             m_components.Add(typeof(Button));
-
             m_components.Add(typeof(LabelTextbox));
             m_components.Add(typeof(TextBox));
 
@@ -65,28 +111,13 @@ namespace Factory_Ide
             
         }
 
-        private void AddCanvasComponents()
-        {
-            AddComponent(new Button()
-            {
-                Content = "Button"
-            });
-            
-        }
-
         private void AddComponent(Control control)
         {
             Canvas.SetTop(control, 10);
             Canvas.SetLeft(control, 10);
-            CvsInterface.Children.Add(control);
-
 
             control.GotFocus += OnCanvasComponentSelected;
-            control.Focus();
-        }
-
-        private void UpdatePropertiesEvent(object sender, SelectionChangedEventArgs args)
-        {
+            PerformCommand(new AddComponentCommand(CvsInterface, control));
 
         }
 
@@ -102,80 +133,65 @@ namespace Factory_Ide
             }
         }
 
-        private void ClearProperties()
+        public void ClearProperties()
         {
             LbxProperties.ItemsSource = null;
         }
 
-        private void OnCanvasComponentSelected(object sender, RoutedEventArgs args)
+        public void ShowProperties(Control c)
         {
             ClearProperties();
-            Control c = (Control) sender;
             List<Control> properties = new List<Control>();
 
             if (c is ContentControl control)
             {
                 var content = new PropertyControl("Content", control.Content.ToString());
-                content.OnTextboxDataChanged += (o, eventArgs) => control.Content = (o as TextBox)?.Text;
+                content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
+                {
+                    PerformCommand(new PropertyEditedCommand(control, "Content", textBox, textBox.Text));
+                }, content);
                 properties.Add(content);
-            } else if (c is TextBox textbox)
+            }
+            else if (c is TextBox textbox)
             {
-                var content = new PropertyControl("Content", textbox.Text.ToString());
-                content.OnTextboxDataChanged += (o, eventArgs) => textbox.Text = (o as TextBox)?.Text;
+                var content = new PropertyControl("Content", textbox.Text);
+                content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
+                {
+                    PerformCommand(new PropertyEditedCommand(textbox, "Text", textBox, textBox.Text));
+                }, content);
                 properties.Add(content);
             }
 
             var height = new PropertyNumberControl("Height", c.Height);
-            height.OnTextboxDataChanged += (o, eventArgs) =>
+            height.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                if (o is TextBox textbox)
-                {
-                    height.SetPropertyValue(textbox.Text);
-                    textbox.Text = height.PropertyValue.ToString();
-                    c.Height = height.PropertyValue;
-                }
-
-            };
+                PerformCommand(new PropertyEditedCommand(c, "Height", textBox, height.PropertyValue));
+            }, height);
             properties.Add(height);
 
             var width = new PropertyNumberControl("Width", c.Width);
-            width.OnTextboxDataChanged += (o, eventArgs) =>
+            width.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                if (o is TextBox textbox)
-                {
-                    width.SetPropertyValue(textbox.Text);
-                    textbox.Text = width.PropertyValue.ToString();
-                    c.Width = width.PropertyValue;
-                }
-            };
+                PerformCommand(new PropertyEditedCommand(c, "Width", textBox, width.PropertyValue));
+            }, width);
             properties.Add(width);
 
             var left = new PropertyNumberControl("X", Canvas.GetLeft(c));
-            left.OnTextboxDataChanged += (o, eventArgs) =>
+            left.TbxValue.LostFocus += UpdateComponentEvent(propertyControl =>
             {
-                if (o is TextBox textbox)
-                {
-                    left.SetPropertyValue(textbox.Text);
-                    textbox.Text = left.PropertyValue.ToString();
-                    CvsInterface.Children.Remove(c);
-                    Canvas.SetLeft(c, left.PropertyValue);
-                    CvsInterface.Children.Add(c);
-                }
-            };
+                PerformCommand(new CanvasPositionCommand(
+                    CanvasPositionCommand.Direction.Left, CvsInterface, c, left.PropertyValue)
+                );
+            }, left);
             properties.Add(left);
 
             var top = new PropertyNumberControl("Y", Canvas.GetTop(c));
-            top.OnTextboxDataChanged += (o, eventArgs) =>
+            top.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                if (o is TextBox textbox)
-                {
-                    top.SetPropertyValue(textbox.Text);
-                    textbox.Text = top.PropertyValue.ToString();
-                    CvsInterface.Children.Remove(c);
-                    Canvas.SetTop(c, top.PropertyValue);
-                    CvsInterface.Children.Add(c);
-                }
-            };
+                PerformCommand(new CanvasPositionCommand(
+                    CanvasPositionCommand.Direction.Top, CvsInterface, c, top.PropertyValue)
+                );
+            }, top);
             properties.Add(top);
 
             var remove = new Button()
@@ -184,12 +200,35 @@ namespace Factory_Ide
             };
             remove.Click += (o, eventArgs) =>
             {
-                CvsInterface.Children.Remove(c);
-                ClearProperties();
+                PerformCommand(new RemoveComponentCommand(CvsInterface, c));
             };
 
             properties.Add(remove);
             LbxProperties.ItemsSource = properties;
+        }
+
+        private RoutedEventHandler UpdateComponentEvent(Action<TextBox> action, PropertyControl propertyControl)
+        {
+            return (sender, args) =>
+            {
+                if (sender is TextBox textbox)
+                {
+                    if (propertyControl is PropertyNumberControl numberControl)
+                    {
+                        numberControl.SetPropertyValue(numberControl.TbxValue.Text);
+                        numberControl.TbxValue.Text = numberControl.PropertyValue.ToString();
+                    }
+                    action(textbox);
+                }
+            };
+        }
+
+        public void OnCanvasComponentSelected(object sender, RoutedEventArgs args)
+        {
+            ClearProperties();
+            Control c = (Control) sender;
+            SelectedControl = c;
+            ShowProperties(c);
         }
 
         private void MnuNew_OnClick(object sender, RoutedEventArgs e)
@@ -208,5 +247,14 @@ namespace Factory_Ide
         }
 
 
+        private void MnuUndo_OnClick(object sender, RoutedEventArgs e)
+        {
+            UndoCommand();
+        }
+
+        private void MnuRedo_OnClick(object sender, RoutedEventArgs e)
+        {
+            RedoCommand();
+        }
     }
 }
