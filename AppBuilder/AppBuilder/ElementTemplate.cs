@@ -10,6 +10,7 @@ namespace AppBuilder
     {
         public string name = "";
         public string formatString = "";
+        private int elementID = 0;
 
         public ElementTemplate(string name, string formatString)
         {
@@ -26,10 +27,10 @@ namespace AppBuilder
             res = res.Replace("%h%", eInfo.h.ToString());
             res = res.Replace("%l%", eInfo.l.ToString());
             res = res.Replace("%t%", eInfo.t.ToString());
+            res = res.Replace("%id%", elementID.ToString());
+            elementID++;
             return res;
         }
-
-
 
     }
 }

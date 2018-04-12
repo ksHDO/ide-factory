@@ -17,7 +17,7 @@ namespace AppBuilder
             languageElements = new ElementTemplate[]
             {
                 new ElementTemplate("textbox",
-                    "<div style=\"position: absolute; left: %l%px; top: %t%px; width: %w%px; height: %h%px;\" >" +
+                    "<div style=\"position: absolute; left: %l%px; top: %t%px; width: %w%px; height: %h%px;\">" +
                     "%content%" +
                     "</div>\r\n"
                 ),
