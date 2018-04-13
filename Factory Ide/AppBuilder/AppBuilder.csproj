@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CmdProcess.cs" />
     <Compile Include="ElementInfo.cs" />
     <Compile Include="Html.cs" />
     <Compile Include="Language.cs" />
