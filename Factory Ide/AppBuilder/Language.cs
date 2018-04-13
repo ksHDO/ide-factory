@@ -10,20 +10,20 @@ namespace AppBuilder
     {
         protected string topText = "";
         protected string bottomText = "";
-        protected string body = "";
+        private string body = "";
 
         protected ElementTemplate[] languageElements = new ElementTemplate[0];
 
-        protected void AppendTopText()
+        private void AppendTopText()
         {
             body += topText;
         }
-        protected void AppendBottomText()
+        private void AppendBottomText()
         {
             body += bottomText;
         }
 
-        protected ElementTemplate FindTemplate(string name)
+        private ElementTemplate FindTemplate(string name)
         {
             var ct = languageElements.Length;
             for (int j = 0; j < ct; ++j)
@@ -37,7 +37,7 @@ namespace AppBuilder
         }
 
 
-        protected void ApplyBody(List<ElementInfo> elementList)
+        private void ApplyBody(List<ElementInfo> elementList)
         {
             var ct = elementList.Count;
             for (int j = 0; j < ct; j++)
@@ -64,6 +64,7 @@ namespace AppBuilder
             AppendBottomText();
 
             Console.WriteLine(body);
+            
         }
     }
 }

@@ -16,11 +16,20 @@ namespace AppBuilder
 
             languageElements = new ElementTemplate[]
             {
-                new ElementTemplate("textbox",
+                new ElementTemplate("label",
                     "<div style=\"position: absolute; left: %l%px; top: %t%px; width: %w%px; height: %h%px;\">" +
                     "%content%" +
                     "</div>\r\n"
                 ),
+                new ElementTemplate("textbox",
+                    "<input type=\"text\" value=\"%content%\" style=\"position: absolute; left: %l%px; top: %t%px; width: %w%px; height: %h%px;\">" +
+                    "</input>\r\n"
+                ),
+                new ElementTemplate("button",
+                    "<button type=\"button\" style=\"position: absolute; left: %l%px; top: %t%px; width: %w%px; height: %h%px;\">" +
+                    "%content%" +
+                    "</button>\r\n"
+                )
             };
         }
 

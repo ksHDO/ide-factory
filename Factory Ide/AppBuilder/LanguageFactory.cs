@@ -51,6 +51,7 @@ namespace AppBuilder
             }
 
             l?.BuildApp(path, elementList);
+            
         }
 
     }

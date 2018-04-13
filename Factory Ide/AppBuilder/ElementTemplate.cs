@@ -21,7 +21,6 @@ namespace AppBuilder
 
         public string Format(ElementInfo eInfo)
         {
-
             string res = String.Copy(formatString);
             res = res.Replace("%content%", eInfo.content);
             res = res.Replace("%w%", eInfo.w.ToString());
