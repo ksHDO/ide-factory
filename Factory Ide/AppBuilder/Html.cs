@@ -3,16 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using System.IO;
 
 namespace AppBuilder
 {
-    class Html : Language
+    public class Html : Language
     {
+
+        protected override void Compile(string folder, string name)
+        {
+            string newPath = folder + name + "." + fileExtension;
+            File.WriteAllText(newPath, body);
+        }
+
         public Html()
         {
             topText = "<!DOCTYPE HTML>\r\n<html>\r\n<head></head>\r\n<body>\r\n";
             bottomText = "\r\n</body>\r\n</html>";
-
+            fileExtension = "html";
             languageElements = new ElementTemplate[]
             {
                 new ElementTemplate("label",

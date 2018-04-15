@@ -6,13 +6,17 @@ using System.Threading.Tasks;
 
 namespace AppBuilder
 {
-    abstract class Language
+    public abstract class Language
     {
         protected string topText = "";
         protected string bottomText = "";
-        private string body = "";
+        protected string body = "";
+        protected string fileExtension = "";
+        protected string executeableExtension = "";
 
-        protected ElementTemplate[] languageElements = new ElementTemplate[0];
+        public ElementTemplate[] languageElements { get; protected set; } = new ElementTemplate[0];
+
+         
 
         private void AppendTopText()
         {
@@ -56,14 +60,17 @@ namespace AppBuilder
             }
         }
 
+        protected abstract void Compile(string folder, string name);
 
-        public void BuildApp(string path, List<ElementInfo> elementList)
+        public void BuildApp(string outputName, string folder, List<ElementInfo> elementList)
         {
             AppendTopText();
             ApplyBody(elementList);
             AppendBottomText();
+            Compile(folder, outputName);
+            //Console.WriteLine(body);
+            //CmdProcess.RunCommand()
 
-            Console.WriteLine(body);
             
         }
     }

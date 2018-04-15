@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ using AppBuilder.Commands;
 using Factory_Ide.Commands;
 using Factory_Ide.Controls;
 using Microsoft.CSharp;
+using Microsoft.Win32;
 
 namespace Factory_Ide
 {
@@ -40,9 +42,17 @@ namespace Factory_Ide
         }
 
         private LanguageFactory m_languageFactory;
+        private List<string> m_supportedLanguages;
+        private int m_selectedLanguage;
         private List<Type> m_components;
 
-        private CommandHistory m_history;
+        private Dictionary<string, Type> m_associatedComponents = new Dictionary<string, Type>
+        {
+            { "label", typeof(LabelTextbox) },
+            { "textbox", typeof(TextBox) },
+            { "button", typeof(Button) }
+        };
+        private readonly CommandHistory m_history;
 
         static MainWindow()
         {
@@ -52,11 +62,30 @@ namespace Factory_Ide
         private MainWindow()
         {
             InitializeComponent();
-            LoadSupportedComponents();
 
             m_languageFactory = new LanguageFactory();
             m_history = new CommandHistory();
 
+            m_supportedLanguages = m_languageFactory.GetSupportedLanguages();
+            MnuLanguage.ItemsSource = m_supportedLanguages.Select(s =>
+            {
+                var item = new MenuItem()
+                {
+                    Header = s,
+                    IsCheckable = true
+                };
+                item.Checked += (sender, args) =>
+                {
+                    if (sender is MenuItem mnuItem)
+                    {
+                        LoadSupportedComponents(GetLanguageIndex(mnuItem));
+                    }
+                };
+                return item;
+            });
+
+            LoadSupportedComponents(0);
+            
             LbxComponents.MouseDoubleClick += (sender, args) =>
             {
                 Control control = (Control) Activator.CreateInstance(m_components[LbxComponents.SelectedIndex]);
@@ -70,23 +99,59 @@ namespace Factory_Ide
             ClearProperties();
         }
 
+        private int GetLanguageIndex(MenuItem menuItem)
+        {
+            for (int i = 0; i < MnuLanguage.Items.Count; ++i)
+            {
+                if (ReferenceEquals(MnuLanguage.Items[i], menuItem))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         public void ResetComponents()
         {
             CvsInterface.Children.Clear();
             ClearProperties();
         }
 
-        private void LoadSupportedComponents()
+        private void LoadSupportedComponents(int languageIndex)
         {
+            int languagesCount = m_supportedLanguages.Count;
+            if (languageIndex < 0 || languageIndex >= languagesCount)
+                throw new IndexOutOfRangeException();
+            
+            for (int i = 0; i < languagesCount; ++i)
+            {
+                ((MenuItem)MnuLanguage.Items[i]).IsChecked = i == languageIndex;
+            }
+
+            m_selectedLanguage = languageIndex;
             m_components = new List<Type>();
 
-            m_components.Add(typeof(Button));
-            m_components.Add(typeof(LabelTextbox));
-            m_components.Add(typeof(TextBox));
+            var supportedComponents = m_languageFactory.GetSupportedComponentsFor(m_supportedLanguages[languageIndex]);
+            foreach (var component in supportedComponents)
+            {
+                Type t = GetAssociatedComponent(component);
 
+                m_components.Add(t);
+            }
 
             LbxComponents.ItemsSource = m_components.Select(s => s.Name);
             
+        }
+
+        private Type GetAssociatedComponent(string component)
+        {
+            return m_associatedComponents[component];
+        }
+
+        private string GetAssociatedComponent(Type type)
+        {
+            return m_associatedComponents.FirstOrDefault(i => i.Value == type).Key;
         }
 
         private void AddComponent(Control control)
@@ -215,7 +280,27 @@ namespace Factory_Ide
 
         private void MnuExport_OnClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            var ofd = new SaveFileDialog()
+            {
+              
+            };
+            if (ofd.ShowDialog() == true)
+            {
+                string file = System.IO.Path.GetFileName(ofd.FileName);
+                string path = System.IO.Path.GetDirectoryName(ofd.FileName);
+                var elements = new List<ElementInfo>();
+                foreach (Control child in CvsInterface.Children)
+                {
+                    string text = "";
+                    if (child is ContentControl cc)
+                        text = cc.Content.ToString();
+                    else if (child is TextBox tbb)
+                        text = tbb.Text;
+                    elements.Add(new ElementInfo(GetAssociatedComponent(child.GetType()), text, (int) Canvas.GetTop(child), (int) Canvas.GetLeft(child), (int) child.Width, (int) child.Height));
+                }
+                m_languageFactory.BuildApplication(m_supportedLanguages[m_selectedLanguage], elements, path, file);
+            };
+            
         }
 
         private void MnuExit_OnClick(object sender, RoutedEventArgs e)

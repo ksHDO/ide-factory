@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AppBuilder
 {
-    struct PropertyInfo
+    public struct PropertyInfo
     {
         public string name;
         public string formatRep;
