@@ -14,8 +14,10 @@ namespace AppBuilder
         {
             LanguageFactory a = new LanguageFactory();
             List<ElementInfo> test = new List<ElementInfo>();
-            test.Add(new ElementInfo("textbox", "Reee", 100, 20, 10, 10));
-            a.BuildApplication("html",test, "no");
+            test.Add(new ElementInfo("textbox", "Reee", 100, 20, 50, 50));
+            a.BuildApplication("html",test, @"D:\Spring2018\Principles\", "Output");
+
+
         }
     }
 }

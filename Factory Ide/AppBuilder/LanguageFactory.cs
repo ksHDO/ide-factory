@@ -28,13 +28,7 @@ namespace AppBuilder
             return langs;
         }
 
-        //public List<string> GetSupportedElementsFor(string s)
-        //{
-                 
-        //}
-
-
-        public void BuildApplication(string languageName, List<ElementInfo> elementList, string path)
+        public List<string> GetSupportedComponentsFor(string languageName)
         {
             Language l = null;
             var supportedLanguages = languages.SupportedLanguages();
@@ -50,7 +44,40 @@ namespace AppBuilder
                 }
             }
 
-            l?.BuildApp(path, elementList);
+            if (l == null) return new List<string>() { "" };
+            List<string> ret = new List<string>();
+
+            for (int j = 0; j < l.languageElements.Length; j++)
+            {
+                ret.Add(String.Copy(l.languageElements[j].name));
+            }
+            return ret;
+        }
+
+
+        //public List<string> GetSupportedElementsFor(string s)
+        //{
+                 
+        //}
+
+
+        public void BuildApplication(string languageName, List<ElementInfo> elementList, string folder, string outputName)
+        {
+            Language l = null;
+            var supportedLanguages = languages.SupportedLanguages();
+            int ct = supportedLanguages.Length;
+            for (int j = 0; j < ct; j++)
+            {
+                var t = supportedLanguages[j];
+
+                if (t.Name.ToLower() == languageName.ToLower())
+                {
+                    l = (Language)Activator.CreateInstance(t);
+                    break;
+                }
+            }
+
+            l?.BuildApp(outputName, folder, elementList);
             
         }
 
