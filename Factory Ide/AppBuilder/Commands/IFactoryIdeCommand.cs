@@ -1,4 +1,4 @@
-﻿namespace Factory_Ide.Commands
+﻿namespace AppBuilder.Commands
 {
     public interface IFactoryIdeCommand
     {

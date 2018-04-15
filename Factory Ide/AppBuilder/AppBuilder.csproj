@@ -43,6 +43,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CmdProcess.cs" />
+    <Compile Include="Commands\CommandHistory.cs" />
+    <Compile Include="Commands\IFactoryIdeCommand.cs" />
     <Compile Include="ElementInfo.cs" />
     <Compile Include="Html.cs" />
     <Compile Include="Language.cs" />

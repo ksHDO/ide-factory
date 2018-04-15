@@ -56,7 +56,6 @@
     </ApplicationDefinition>
     <Compile Include="Commands\AddComponentCommand.cs" />
     <Compile Include="Commands\CanvasPositionCommand.cs" />
-    <Compile Include="Commands\IFactoryIdeCommand.cs" />
     <Compile Include="Commands\PropertyEditedCommand.cs" />
     <Compile Include="Commands\RemoveComponentCommand.cs" />
     <Compile Include="Controls\LabelTextbox.cs" />
@@ -106,6 +105,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AppBuilder\AppBuilder.csproj">
+      <Project>{ff4501d5-9266-4c8c-9eb6-5c208be26c1e}</Project>
+      <Name>AppBuilder</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

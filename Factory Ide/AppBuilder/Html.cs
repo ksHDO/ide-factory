@@ -8,7 +8,6 @@ namespace AppBuilder
 {
     class Html : Language
     {
-
         public Html()
         {
             topText = "<!DOCTYPE HTML>\r\n<html>\r\n<head></head>\r\n<body>\r\n";

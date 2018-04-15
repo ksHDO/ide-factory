@@ -12,9 +12,11 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using AppBuilder;
+using AppBuilder.Commands;
 using Factory_Ide.Commands;
 using Factory_Ide.Controls;
-using ICommand = System.Windows.Input.ICommand;
+using Microsoft.CSharp;
 
 namespace Factory_Ide
 {
@@ -37,10 +39,10 @@ namespace Factory_Ide
             }
         }
 
+        private LanguageFactory m_languageFactory;
         private List<Type> m_components;
 
-        private readonly Stack<IFactoryIdeCommand> m_undoHistory;
-        private readonly Stack<IFactoryIdeCommand> m_redoHistory;
+        private CommandHistory m_history;
 
         static MainWindow()
         {
@@ -52,8 +54,8 @@ namespace Factory_Ide
             InitializeComponent();
             LoadSupportedComponents();
 
-            m_undoHistory = new Stack<IFactoryIdeCommand>(200);
-            m_redoHistory = new Stack<IFactoryIdeCommand>(200);
+            m_languageFactory = new LanguageFactory();
+            m_history = new CommandHistory();
 
             LbxComponents.MouseDoubleClick += (sender, args) =>
             {
@@ -66,29 +68,6 @@ namespace Factory_Ide
                 AddComponent(control);
             };
             ClearProperties();
-        }
-
-        public void PerformCommand(IFactoryIdeCommand command)
-        {
-            command.Do();
-            m_redoHistory.Clear();
-            m_undoHistory.Push(command);
-        }
-
-        public void UndoCommand()
-        {
-            if (m_undoHistory.Count <= 0) return;
-            var command = m_undoHistory.Pop();
-            command.Undo();
-            m_redoHistory.Push(command);
-        }
-
-        public void RedoCommand()
-        {
-            if (m_redoHistory.Count <= 0) return;
-            var command = m_redoHistory.Pop();
-            command.Do();
-            m_undoHistory.Push(command);
         }
 
         public void ResetComponents()
@@ -116,8 +95,7 @@ namespace Factory_Ide
             Canvas.SetLeft(control, 10);
 
             control.GotFocus += OnCanvasComponentSelected;
-            PerformCommand(new AddComponentCommand(CvsInterface, control));
-
+            m_history.PerformCommand(new AddComponentCommand(CvsInterface, control));
         }
 
         private static void SetTextOnControl(Control c, string text)
@@ -147,7 +125,7 @@ namespace Factory_Ide
                 var content = new PropertyControl("Content", control.Content.ToString());
                 content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
                 {
-                    PerformCommand(new PropertyEditedCommand(control, "Content", textBox, textBox.Text));
+                    m_history.PerformCommand(new PropertyEditedCommand(control, "Content", textBox, textBox.Text));
                 }, content);
                 properties.Add(content);
             }
@@ -156,7 +134,7 @@ namespace Factory_Ide
                 var content = new PropertyControl("Content", textbox.Text);
                 content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
                 {
-                    PerformCommand(new PropertyEditedCommand(textbox, "Text", textBox, textBox.Text));
+                    m_history.PerformCommand(new PropertyEditedCommand(textbox, "Text", textBox, textBox.Text));
                 }, content);
                 properties.Add(content);
             }
@@ -164,21 +142,21 @@ namespace Factory_Ide
             var height = new PropertyNumberControl("Height", c.Height);
             height.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                PerformCommand(new PropertyEditedCommand(c, "Height", textBox, height.PropertyValue));
+                m_history.PerformCommand(new PropertyEditedCommand(c, "Height", textBox, height.PropertyValue));
             }, height);
             properties.Add(height);
 
             var width = new PropertyNumberControl("Width", c.Width);
             width.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                PerformCommand(new PropertyEditedCommand(c, "Width", textBox, width.PropertyValue));
+                m_history.PerformCommand(new PropertyEditedCommand(c, "Width", textBox, width.PropertyValue));
             }, width);
             properties.Add(width);
 
             var left = new PropertyNumberControl("X", Canvas.GetLeft(c));
             left.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                PerformCommand(new CanvasPositionCommand(
+                m_history.PerformCommand(new CanvasPositionCommand(
                     CanvasPositionCommand.Direction.Left, CvsInterface, c, textBox, left.PropertyValue)
                 );
             }, left);
@@ -187,7 +165,7 @@ namespace Factory_Ide
             var top = new PropertyNumberControl("Y", Canvas.GetTop(c));
             top.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                PerformCommand(new CanvasPositionCommand(
+                m_history.PerformCommand(new CanvasPositionCommand(
                     CanvasPositionCommand.Direction.Top, CvsInterface, c, textBox, top.PropertyValue)
                 );
             }, top);
@@ -199,7 +177,7 @@ namespace Factory_Ide
             };
             remove.Click += (o, eventArgs) =>
             {
-                PerformCommand(new RemoveComponentCommand(CvsInterface, c));
+                m_history.PerformCommand(new RemoveComponentCommand(CvsInterface, c));
             };
 
             properties.Add(remove);
@@ -247,12 +225,12 @@ namespace Factory_Ide
 
         private void MnuUndo_OnClick(object sender, RoutedEventArgs e)
         {
-            UndoCommand();
+            m_history.UndoCommand();
         }
 
         private void MnuRedo_OnClick(object sender, RoutedEventArgs e)
         {
-            RedoCommand();
+            m_history.RedoCommand();
         }
     }
 }
