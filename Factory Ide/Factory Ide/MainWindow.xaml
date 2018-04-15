@@ -20,6 +20,8 @@
                 <MenuItem Header="_Undo" x:Name="MnuUndo" Click="MnuUndo_OnClick"/>
                 <MenuItem Header="_Redo" x:Name="MnuRedo" Click="MnuRedo_OnClick" />
             </MenuItem>
+            <MenuItem Header="_Language" x:Name="MnuLanguage">
+            </MenuItem>
         </Menu>
         <Grid>
             <Grid.ColumnDefinitions>

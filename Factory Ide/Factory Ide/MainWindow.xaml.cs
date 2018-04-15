@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,9 +13,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using AppBuilder;
+using AppBuilder.Commands;
 using Factory_Ide.Commands;
 using Factory_Ide.Controls;
-using ICommand = System.Windows.Input.ICommand;
+using Microsoft.CSharp;
+using Microsoft.Win32;
 
 namespace Factory_Ide
 {
@@ -37,10 +41,18 @@ namespace Factory_Ide
             }
         }
 
+        private LanguageFactory m_languageFactory;
+        private List<string> m_supportedLanguages;
+        private int m_selectedLanguage;
         private List<Type> m_components;
 
-        private readonly Stack<IFactoryIdeCommand> m_undoHistory;
-        private readonly Stack<IFactoryIdeCommand> m_redoHistory;
+        private Dictionary<string, Type> m_associatedComponents = new Dictionary<string, Type>
+        {
+            { "label", typeof(LabelTextbox) },
+            { "textbox", typeof(TextBox) },
+            { "button", typeof(Button) }
+        };
+        private readonly CommandHistory m_history;
 
         static MainWindow()
         {
@@ -50,11 +62,30 @@ namespace Factory_Ide
         private MainWindow()
         {
             InitializeComponent();
-            LoadSupportedComponents();
 
-            m_undoHistory = new Stack<IFactoryIdeCommand>(200);
-            m_redoHistory = new Stack<IFactoryIdeCommand>(200);
+            m_languageFactory = new LanguageFactory();
+            m_history = new CommandHistory();
 
+            m_supportedLanguages = m_languageFactory.GetSupportedLanguages();
+            MnuLanguage.ItemsSource = m_supportedLanguages.Select(s =>
+            {
+                var item = new MenuItem()
+                {
+                    Header = s,
+                    IsCheckable = true
+                };
+                item.Checked += (sender, args) =>
+                {
+                    if (sender is MenuItem mnuItem)
+                    {
+                        LoadSupportedComponents(GetLanguageIndex(mnuItem));
+                    }
+                };
+                return item;
+            });
+
+            LoadSupportedComponents(0);
+            
             LbxComponents.MouseDoubleClick += (sender, args) =>
             {
                 Control control = (Control) Activator.CreateInstance(m_components[LbxComponents.SelectedIndex]);
@@ -68,27 +99,17 @@ namespace Factory_Ide
             ClearProperties();
         }
 
-        public void PerformCommand(IFactoryIdeCommand command)
+        private int GetLanguageIndex(MenuItem menuItem)
         {
-            command.Do();
-            m_redoHistory.Clear();
-            m_undoHistory.Push(command);
-        }
+            for (int i = 0; i < MnuLanguage.Items.Count; ++i)
+            {
+                if (ReferenceEquals(MnuLanguage.Items[i], menuItem))
+                {
+                    return i;
+                }
+            }
 
-        public void UndoCommand()
-        {
-            if (m_undoHistory.Count <= 0) return;
-            var command = m_undoHistory.Pop();
-            command.Undo();
-            m_redoHistory.Push(command);
-        }
-
-        public void RedoCommand()
-        {
-            if (m_redoHistory.Count <= 0) return;
-            var command = m_redoHistory.Pop();
-            command.Do();
-            m_undoHistory.Push(command);
+            return -1;
         }
 
         public void ResetComponents()
@@ -97,17 +118,40 @@ namespace Factory_Ide
             ClearProperties();
         }
 
-        private void LoadSupportedComponents()
+        private void LoadSupportedComponents(int languageIndex)
         {
+            int languagesCount = m_supportedLanguages.Count;
+            if (languageIndex < 0 || languageIndex >= languagesCount)
+                throw new IndexOutOfRangeException();
+            
+            for (int i = 0; i < languagesCount; ++i)
+            {
+                ((MenuItem)MnuLanguage.Items[i]).IsChecked = i == languageIndex;
+            }
+
+            m_selectedLanguage = languageIndex;
             m_components = new List<Type>();
 
-            m_components.Add(typeof(Button));
-            m_components.Add(typeof(LabelTextbox));
-            m_components.Add(typeof(TextBox));
+            var supportedComponents = m_languageFactory.GetSupportedComponentsFor(m_supportedLanguages[languageIndex]);
+            foreach (var component in supportedComponents)
+            {
+                Type t = GetAssociatedComponent(component);
 
+                m_components.Add(t);
+            }
 
             LbxComponents.ItemsSource = m_components.Select(s => s.Name);
             
+        }
+
+        private Type GetAssociatedComponent(string component)
+        {
+            return m_associatedComponents[component];
+        }
+
+        private string GetAssociatedComponent(Type type)
+        {
+            return m_associatedComponents.FirstOrDefault(i => i.Value == type).Key;
         }
 
         private void AddComponent(Control control)
@@ -116,8 +160,7 @@ namespace Factory_Ide
             Canvas.SetLeft(control, 10);
 
             control.GotFocus += OnCanvasComponentSelected;
-            PerformCommand(new AddComponentCommand(CvsInterface, control));
-
+            m_history.PerformCommand(new AddComponentCommand(CvsInterface, control));
         }
 
         private static void SetTextOnControl(Control c, string text)
@@ -147,7 +190,7 @@ namespace Factory_Ide
                 var content = new PropertyControl("Content", control.Content.ToString());
                 content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
                 {
-                    PerformCommand(new PropertyEditedCommand(control, "Content", textBox, textBox.Text));
+                    m_history.PerformCommand(new PropertyEditedCommand(control, "Content", textBox, textBox.Text));
                 }, content);
                 properties.Add(content);
             }
@@ -156,7 +199,7 @@ namespace Factory_Ide
                 var content = new PropertyControl("Content", textbox.Text);
                 content.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
                 {
-                    PerformCommand(new PropertyEditedCommand(textbox, "Text", textBox, textBox.Text));
+                    m_history.PerformCommand(new PropertyEditedCommand(textbox, "Text", textBox, textBox.Text));
                 }, content);
                 properties.Add(content);
             }
@@ -164,21 +207,21 @@ namespace Factory_Ide
             var height = new PropertyNumberControl("Height", c.Height);
             height.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                PerformCommand(new PropertyEditedCommand(c, "Height", textBox, height.PropertyValue));
+                m_history.PerformCommand(new PropertyEditedCommand(c, "Height", textBox, height.PropertyValue));
             }, height);
             properties.Add(height);
 
             var width = new PropertyNumberControl("Width", c.Width);
             width.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                PerformCommand(new PropertyEditedCommand(c, "Width", textBox, width.PropertyValue));
+                m_history.PerformCommand(new PropertyEditedCommand(c, "Width", textBox, width.PropertyValue));
             }, width);
             properties.Add(width);
 
             var left = new PropertyNumberControl("X", Canvas.GetLeft(c));
             left.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                PerformCommand(new CanvasPositionCommand(
+                m_history.PerformCommand(new CanvasPositionCommand(
                     CanvasPositionCommand.Direction.Left, CvsInterface, c, textBox, left.PropertyValue)
                 );
             }, left);
@@ -187,7 +230,7 @@ namespace Factory_Ide
             var top = new PropertyNumberControl("Y", Canvas.GetTop(c));
             top.TbxValue.LostFocus += UpdateComponentEvent(textBox =>
             {
-                PerformCommand(new CanvasPositionCommand(
+                m_history.PerformCommand(new CanvasPositionCommand(
                     CanvasPositionCommand.Direction.Top, CvsInterface, c, textBox, top.PropertyValue)
                 );
             }, top);
@@ -199,7 +242,7 @@ namespace Factory_Ide
             };
             remove.Click += (o, eventArgs) =>
             {
-                PerformCommand(new RemoveComponentCommand(CvsInterface, c));
+                m_history.PerformCommand(new RemoveComponentCommand(CvsInterface, c));
             };
 
             properties.Add(remove);
@@ -237,7 +280,27 @@ namespace Factory_Ide
 
         private void MnuExport_OnClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            var ofd = new SaveFileDialog()
+            {
+              
+            };
+            if (ofd.ShowDialog() == true)
+            {
+                string file = System.IO.Path.GetFileName(ofd.FileName);
+                string path = System.IO.Path.GetDirectoryName(ofd.FileName);
+                var elements = new List<ElementInfo>();
+                foreach (Control child in CvsInterface.Children)
+                {
+                    string text = "";
+                    if (child is ContentControl cc)
+                        text = cc.Content.ToString();
+                    else if (child is TextBox tbb)
+                        text = tbb.Text;
+                    elements.Add(new ElementInfo(GetAssociatedComponent(child.GetType()), text, (int) Canvas.GetTop(child), (int) Canvas.GetLeft(child), (int) child.Width, (int) child.Height));
+                }
+                m_languageFactory.BuildApplication(m_supportedLanguages[m_selectedLanguage], elements, path, file);
+            };
+            
         }
 
         private void MnuExit_OnClick(object sender, RoutedEventArgs e)
@@ -247,12 +310,12 @@ namespace Factory_Ide
 
         private void MnuUndo_OnClick(object sender, RoutedEventArgs e)
         {
-            UndoCommand();
+            m_history.UndoCommand();
         }
 
         private void MnuRedo_OnClick(object sender, RoutedEventArgs e)
         {
-            RedoCommand();
+            m_history.RedoCommand();
         }
     }
 }
