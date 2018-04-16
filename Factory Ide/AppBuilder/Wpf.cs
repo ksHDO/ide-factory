@@ -14,8 +14,9 @@ namespace AppBuilder
     {
         protected override void Compile(string folder, string name)
         {
-            string path = Path.Combine(folder, name + "." + fileExtension);
-            File.WriteAllText(path, body);
+            
+            string path = Path.Combine(folder, name);
+            File.WriteAllText(path + "." + executeableExtension, body);
 
 
             CSharpCodeProvider provider = new CSharpCodeProvider();
@@ -26,7 +27,7 @@ namespace AppBuilder
             parameters.ReferencedAssemblies.Add("PresentationCore.dll");
             parameters.ReferencedAssemblies.Add("System.dll");
             parameters.ReferencedAssemblies.Add("System.Xaml.dll");
-            parameters.OutputAssembly = $"{folder}{name}.{executeableExtension}";
+            parameters.OutputAssembly = $"{path}.{executeableExtension}";
             parameters.GenerateInMemory = true;
             parameters.GenerateExecutable = true;
 
