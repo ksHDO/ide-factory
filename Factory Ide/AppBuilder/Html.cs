@@ -13,8 +13,8 @@ namespace AppBuilder
 
         protected override void Compile(string folder, string name)
         {
-            string newPath = folder + name + "." + fileExtension;
-            File.WriteAllText(newPath, body);
+            string path = Path.Combine(folder, name + "." + fileExtension);
+            File.WriteAllText(path, body);
         }
 
         public Html()

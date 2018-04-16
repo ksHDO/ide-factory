@@ -14,9 +14,8 @@ namespace AppBuilder
     {
         protected override void Compile(string folder, string name)
         {
-
-            string newPath = folder + name + "." + fileExtension;
-            File.WriteAllText(newPath, body);
+            string path = Path.Combine(folder, name + "." + fileExtension);
+            File.WriteAllText(path, body);
 
 
             CSharpCodeProvider provider = new CSharpCodeProvider();
@@ -108,6 +107,15 @@ namespace AppBuilder
                     "label%id%.Height = %h%;" +
                     "canvas.Children.Add(label%id%);"
                 ),
+                new ElementTemplate("checkbox",
+                    "var checkbox%id% = new CheckBox();\r\n"+
+                    "checkbox%id%.Content = \"%content%\";"+
+                    "Canvas.SetLeft(checkbox%id%, %l%);" +
+                    "Canvas.SetTop(checkbox%id%, %t%);" +
+                    "checkbox%id%.Width = %w%;" +
+                    "checkbox%id%.Height = %h%;" +
+                    "canvas.Children.Add(checkbox%id%);"
+                )
             };
         }
 
