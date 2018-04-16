@@ -50,7 +50,8 @@ namespace Factory_Ide
         {
             { "label", typeof(LabelTextbox) },
             { "textbox", typeof(TextBox) },
-            { "button", typeof(Button) }
+            { "button", typeof(Button) },
+            { "checkbox", typeof(CheckBox) }
         };
         private readonly CommandHistory m_history;
 
@@ -93,6 +94,9 @@ namespace Factory_Ide
                 {
                     textbox.IsReadOnly = true;
                 }
+
+                control.Width = 100;
+                control.Height = 30;
                 SetTextOnControl(control, control.GetType().Name);
                 AddComponent(control);
             };
@@ -141,7 +145,6 @@ namespace Factory_Ide
             }
 
             LbxComponents.ItemsSource = m_components.Select(s => s.Name);
-            
         }
 
         private Type GetAssociatedComponent(string component)
@@ -284,8 +287,11 @@ namespace Factory_Ide
             {
               
             };
+
             if (ofd.ShowDialog() == true)
             {
+                var supportedComponents = m_languageFactory.GetSupportedComponentsFor(m_supportedLanguages[m_selectedLanguage]);
+                
                 string file = System.IO.Path.GetFileName(ofd.FileName);
                 string path = System.IO.Path.GetDirectoryName(ofd.FileName);
                 var elements = new List<ElementInfo>();
@@ -296,7 +302,12 @@ namespace Factory_Ide
                         text = cc.Content.ToString();
                     else if (child is TextBox tbb)
                         text = tbb.Text;
-                    elements.Add(new ElementInfo(GetAssociatedComponent(child.GetType()), text, (int) Canvas.GetTop(child), (int) Canvas.GetLeft(child), (int) child.Width, (int) child.Height));
+                    string associatedComponent = GetAssociatedComponent(child.GetType());
+                    if (supportedComponents.Contains(associatedComponent))
+                    {
+                        elements.Add(new ElementInfo(associatedComponent, text, (int)Canvas.GetTop(child), (int)Canvas.GetLeft(child), (int)child.Width, (int)child.Height));
+                    }
+                   
                 }
                 m_languageFactory.BuildApplication(m_supportedLanguages[m_selectedLanguage], elements, path, file);
             };
