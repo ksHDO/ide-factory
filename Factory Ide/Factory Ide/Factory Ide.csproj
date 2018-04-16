@@ -123,6 +123,10 @@
       <Project>{ff4501d5-9266-4c8c-9eb6-5c208be26c1e}</Project>
       <Name>AppBuilder</Name>
     </ProjectReference>
+    <ProjectReference Include="..\LanguageLibrary\LanguageLibrary.csproj">
+      <Project>{06e45084-a9ce-4fd6-97c4-23ba16d06f5c}</Project>
+      <Name>LanguageLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

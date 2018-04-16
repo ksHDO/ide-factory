@@ -16,7 +16,7 @@ namespace AppBuilder
         {
             
             string path = Path.Combine(folder, name);
-            File.WriteAllText(path + "." + executeableExtension, body);
+            File.WriteAllText(path + "." + fileExtension, body);
 
 
             CSharpCodeProvider provider = new CSharpCodeProvider();

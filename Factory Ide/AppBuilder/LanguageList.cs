@@ -15,6 +15,12 @@ namespace AppBuilder
             supportedLanguages.AddRange(types);
         }
 
+        public void Add(Type type)
+        {
+            supportedLanguages.Add(type);
+        }
+        
+
         public Type[] SupportedLanguages()
         {
             return supportedLanguages.ToArray();

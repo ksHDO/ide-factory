@@ -62,9 +62,13 @@ namespace Factory_Ide
 
         private MainWindow()
         {
+            LanguageFactory.AddLanguage<Html>();
+            LanguageFactory.AddLanguage<Wpf>();
+
             InitializeComponent();
 
             m_languageFactory = new LanguageFactory();
+            
             m_history = new CommandHistory();
 
             m_supportedLanguages = m_languageFactory.GetSupportedLanguages();
