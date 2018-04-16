@@ -13,8 +13,13 @@ namespace AppBuilder
         static LanguageFactory()
         {
             languages = new LanguageList();
-            var properLangs = typeof(Language).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(Language))).ToArray();
+            var properLangs = typeof(object).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(Language))).ToArray();
             languages.SetTypes(properLangs); 
+        }
+
+        public static void AddLanguage<T>() where T : Language
+        {
+            languages.Add(typeof(T));
         }
 
         public List<string> GetSupportedLanguages()
